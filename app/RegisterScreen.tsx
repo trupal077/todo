@@ -1,12 +1,20 @@
 import { clientService } from "@/utils/services";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Button,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import Toast from "react-native-toast-message";
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false); // Loader state
   const router = useRouter();
 
   const handleRegister = async () => {
@@ -24,11 +32,9 @@ export default function RegisterScreen() {
       password: password,
     };
 
+    setLoading(true); // Show loader during registration
     try {
       const response = await clientService.post("register", data);
-
-      console.log(response?.data?.data);
-
       if (response?.data?.status) {
         Toast.show({
           type: "success",
@@ -66,6 +72,8 @@ export default function RegisterScreen() {
           text2: "Something went wrong during the request.",
         });
       }
+    } finally {
+      setLoading(false); // Hide loader after registration attempt
     }
   };
 
@@ -92,7 +100,11 @@ export default function RegisterScreen() {
         secureTextEntry
       />
 
-      <Button title="Register" onPress={handleRegister} />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" style={styles.loader} /> // Loader while registering
+      ) : (
+        <Button title="Register" onPress={handleRegister} />
+      )}
     </View>
   );
 }
@@ -115,5 +127,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
     fontWeight: "bold",
+  },
+  loader: {
+    marginVertical: 20,
   },
 });

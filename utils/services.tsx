@@ -21,7 +21,6 @@ export const clientService = {
 
   post: async (endPoint: string, data: any) => {
     const token = await AsyncStorage.getItem("token");
-    console.log(token)
     const headers = {
       headers: {
         Accept: "application/json",

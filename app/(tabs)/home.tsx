@@ -3,6 +3,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import CheckBox from "@react-native-community/checkbox";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Button,
   FlatList,
   StyleSheet,
@@ -17,8 +18,11 @@ import Toast from "react-native-toast-message";
 const Home = () => {
   const [todo, setTodo] = useState("");
   const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(false); // Loader state
+  const [isSubmitting, setIsSubmitting] = useState(false); // For handling submission loader
 
   const getTodos = async () => {
+    setLoading(true); // Show loader while fetching
     try {
       const res = await clientService.get("todos");
       if (res?.status) {
@@ -26,6 +30,8 @@ const Home = () => {
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false); // Hide loader after fetching
     }
   };
 
@@ -38,6 +44,7 @@ const Home = () => {
       });
       return;
     }
+    setIsSubmitting(true); // Show loader during submission
     try {
       const data = {
         todo_name: todo,
@@ -63,11 +70,13 @@ const Home = () => {
       }
     } catch (error) {
       console.error(error);
-      setTodo("");
+    } finally {
+      setIsSubmitting(false); // Hide loader after submission
     }
   };
 
   const handleDelete = async (id: any) => {
+    setLoading(true); // Show loader while deleting
     try {
       const res = await clientService.delete(`todos/${id}`);
       if (res?.data?.success) {
@@ -80,6 +89,8 @@ const Home = () => {
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false); // Hide loader after deletion
     }
   };
 
@@ -130,17 +141,25 @@ const Home = () => {
           style={styles.input}
           placeholder="Add a new todo"
         />
-        <Button title="Add Todo" onPress={handleAddTodo} />
+        {isSubmitting ? (
+          <ActivityIndicator size="small" color="#0000ff" /> // Loader while adding
+        ) : (
+          <Button title="Add Todo" onPress={handleAddTodo} />
+        )}
       </View>
-      <FlatList
-        data={todos}
-        keyExtractor={(item: any) => item._id.toString()}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No todos available</Text>
-        }
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" /> // Loader while fetching
+      ) : (
+        <FlatList
+          data={todos}
+          keyExtractor={(item: any) => item._id.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No todos available</Text>
+          }
+        />
+      )}
       <Toast
         config={{
           success: (internalState) => (
