@@ -1,10 +1,9 @@
 import { clientService } from "@/utils/services";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import CheckBox from "@react-native-community/checkbox";
+import Checkbox from "expo-checkbox";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Button,
   FlatList,
   StyleSheet,
   Text,
@@ -15,14 +14,20 @@ import {
 import Animated, { SlideInRight, SlideOutLeft } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
+interface Todo {
+  _id: string;
+  todo_name: string;
+  completed: boolean;
+}
+
 const Home = () => {
-  const [todo, setTodo] = useState("");
-  const [todos, setTodos] = useState([]);
-  const [loading, setLoading] = useState(false); // Loader state
-  const [isSubmitting, setIsSubmitting] = useState(false); // For handling submission loader
+  const [todo, setTodo] = useState<string>("");
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const getTodos = async () => {
-    setLoading(true); // Show loader while fetching
+    setLoading(true);
     try {
       const res = await clientService.get("todos");
       if (res?.status) {
@@ -31,7 +36,7 @@ const Home = () => {
     } catch (error) {
       console.log(error);
     } finally {
-      setLoading(false); // Hide loader after fetching
+      setLoading(false);
     }
   };
 
@@ -44,15 +49,13 @@ const Home = () => {
       });
       return;
     }
-    setIsSubmitting(true); // Show loader during submission
+    setIsSubmitting(true);
     try {
       const data = {
         todo_name: todo,
         completed: false,
       };
       const res = await clientService.post("addTodo", data);
-      console.log("AddTodo response:", res);
-
       if (res?.status) {
         Toast.show({
           type: "success",
@@ -71,12 +74,12 @@ const Home = () => {
     } catch (error) {
       console.error(error);
     } finally {
-      setIsSubmitting(false); // Hide loader after submission
+      setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: any) => {
-    setLoading(true); // Show loader while deleting
+  const handleDelete = async (id: string) => {
+    setLoading(true);
     try {
       const res = await clientService.delete(`todos/${id}`);
       if (res?.data?.success) {
@@ -90,13 +93,13 @@ const Home = () => {
     } catch (error) {
       console.log(error);
     } finally {
-      setLoading(false); // Hide loader after deletion
+      setLoading(false);
     }
   };
 
-  const handleCheckboxChange = async (id: any, value: any) => {
+  const handleCheckboxChange = async (id: string, value: boolean) => {
     try {
-      const updatedTodos: any = todos.map((todo: any) =>
+      const updatedTodos: Todo[] = todos.map((todo) =>
         todo._id === id ? { ...todo, completed: value } : todo
       );
       setTodos(updatedTodos);
@@ -116,16 +119,19 @@ const Home = () => {
     getTodos();
   }, []);
 
-  const renderItem = ({ item }: any) => (
+  const renderItem = ({ item }: { item: Todo }) => (
     <View style={styles.todoItem}>
-      <Text style={styles.todoText}>{item.todo_name}</Text>
+      <Text style={[styles.todoText, item.completed && styles.completedText]}>
+        {item.todo_name}
+      </Text>
       <View style={styles.actionContainer}>
-        <CheckBox
+        <Checkbox
           value={item.completed}
           onValueChange={(value) => handleCheckboxChange(item._id, value)}
+          color={item.completed ? "#4630EB" : undefined}
         />
         <TouchableOpacity onPress={() => handleDelete(item._id)}>
-          <AntDesign name="delete" size={24} color="red" />
+          <AntDesign name="delete" size={24} color="#FF3D00" />
         </TouchableOpacity>
       </View>
     </View>
@@ -134,25 +140,27 @@ const Home = () => {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Enter Todo</Text>
         <TextInput
           value={todo}
           onChangeText={setTodo}
           style={styles.input}
           placeholder="Add a new todo"
+          placeholderTextColor="#888"
         />
         {isSubmitting ? (
-          <ActivityIndicator size="small" color="#0000ff" /> // Loader while adding
+          <ActivityIndicator size="small" color="#4630EB" />
         ) : (
-          <Button title="Add Todo" onPress={handleAddTodo} />
+          <TouchableOpacity style={styles.addButton} onPress={handleAddTodo}>
+            <Text style={styles.addButtonText}>Add Todo</Text>
+          </TouchableOpacity>
         )}
       </View>
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" /> // Loader while fetching
+        <ActivityIndicator size="large" color="#4630EB" />
       ) : (
         <FlatList
           data={todos}
-          keyExtractor={(item: any) => item._id.toString()}
+          keyExtractor={(item) => item._id.toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.listContainer}
           ListEmptyComponent={
@@ -204,39 +212,53 @@ const Home = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: "#f0f0f0",
+    padding: 16,
+    backgroundColor: "#F9F9F9",
   },
   inputContainer: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
     elevation: 5,
-    marginBottom: 10,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
-    marginBottom: 10,
+    marginBottom: 8,
+    color: "#333",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
+    borderColor: "#E0E0E0",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+    fontSize: 16,
+    color: "#333",
+  },
+  addButton: {
+    backgroundColor: "#4630EB",
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  addButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 16,
   },
   listContainer: {
     paddingVertical: 10,
   },
   todoItem: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 12,
     marginBottom: 10,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -244,17 +266,21 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+    shadowRadius: 1.5,
+    elevation: 3,
   },
   todoText: {
     fontSize: 16,
     flex: 1,
   },
+  completedText: {
+    textDecorationLine: "line-through",
+    color: "#888",
+  },
   actionContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: 10,
   },
   emptyText: {
     textAlign: "center",
