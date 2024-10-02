@@ -15,9 +15,9 @@ const TabLayout = () => {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="search"
         options={{
-          tabBarLabel: "Explore",
+          tabBarLabel: "Search",
           tabBarIcon: ({ color }) => (
             <Ionicons name="search" size={24} color={color} />
           ),
