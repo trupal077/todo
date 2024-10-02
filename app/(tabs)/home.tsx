@@ -1,7 +1,6 @@
-import { config } from "@/config/config";
+import { clientService } from "@/utils/services";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import CheckBox from "@react-native-community/checkbox";
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
   Button,
@@ -12,10 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Animated, {
-  SlideInRight,
-  SlideOutLeft,
-} from "react-native-reanimated";
+import Animated, { SlideInRight, SlideOutLeft } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
 const Home = () => {
@@ -24,7 +20,7 @@ const Home = () => {
 
   const getTodos = async () => {
     try {
-      const res = await axios.get(`${config.apiUrl}todos`);
+      const res = await clientService.get("todos");
       if (res?.status) {
         setTodos(res?.data);
       }
@@ -47,9 +43,10 @@ const Home = () => {
         todo_name: todo,
         completed: false,
       };
-      const res = await axios.post(`${config.apiUrl}addTodo`, data);
+      const res = await clientService.post("addTodo", data);
+      console.log("AddTodo response:", res);
 
-      if (res?.data?.success) {
+      if (res?.status) {
         Toast.show({
           type: "success",
           text1: "Success",
@@ -57,6 +54,12 @@ const Home = () => {
         });
         getTodos();
         setTodo("");
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: res?.data || "Failed to add todo",
+        });
       }
     } catch (error) {
       console.error(error);
@@ -64,9 +67,9 @@ const Home = () => {
     }
   };
 
-  const handleDelete = async (id:any) => {
+  const handleDelete = async (id: any) => {
     try {
-      const res = await axios.delete(`${config.apiUrl}todos/${id}`);
+      const res = await clientService.delete(`todos/${id}`);
       if (res?.data?.success) {
         Toast.show({
           type: "success",
@@ -80,14 +83,14 @@ const Home = () => {
     }
   };
 
-  const handleCheckboxChange = async (id:any, value:any) => {
+  const handleCheckboxChange = async (id: any, value: any) => {
     try {
-      const updatedTodos:any = todos.map((todo:any) =>
+      const updatedTodos: any = todos.map((todo: any) =>
         todo._id === id ? { ...todo, completed: value } : todo
       );
       setTodos(updatedTodos);
 
-      await axios.put(`${config.apiUrl}todos/${id}`, { completed: value });
+      await clientService.post(`todos/${id}`, { completed: value });
       Toast.show({
         type: "info",
         text1: "Updated",
@@ -102,7 +105,7 @@ const Home = () => {
     getTodos();
   }, []);
 
-  const renderItem = ({ item }:any) => (
+  const renderItem = ({ item }: any) => (
     <View style={styles.todoItem}>
       <Text style={styles.todoText}>{item.todo_name}</Text>
       <View style={styles.actionContainer}>
@@ -131,7 +134,7 @@ const Home = () => {
       </View>
       <FlatList
         data={todos}
-        keyExtractor={(item:any) => item._id.toString()}
+        keyExtractor={(item: any) => item._id.toString()}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
