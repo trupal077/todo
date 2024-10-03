@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -25,6 +26,8 @@ const Home = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
+  const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
 
   const getTodos = async () => {
     setLoading(true);
@@ -78,23 +81,31 @@ const Home = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async () => {
     setLoading(true);
     try {
-      const res = await clientService.delete(`todos/${id}`);
-      if (res?.data?.success) {
-        Toast.show({
-          type: "success",
-          text1: "Deleted",
-          text2: "Todo has been deleted successfully",
-        });
-        getTodos();
+      if (selectedTodoId) {
+        const res = await clientService.delete(`todos/${selectedTodoId}`);
+        if (res?.data?.success) {
+          Toast.show({
+            type: "success",
+            text1: "Deleted",
+            text2: res?.data?.message,
+          });
+          getTodos();
+        }
       }
     } catch (error) {
       console.log(error);
     } finally {
       setLoading(false);
+      setDeleteModalVisible(false); // Close modal after deletion
     }
+  };
+
+  const handleConfirmDelete = (id: string) => {
+    setSelectedTodoId(id);
+    setDeleteModalVisible(true); // Open modal for confirmation
   };
 
   const handleCheckboxChange = async (id: string, value: boolean) => {
@@ -130,7 +141,7 @@ const Home = () => {
           onValueChange={(value) => handleCheckboxChange(item._id, value)}
           color={item.completed ? "#4630EB" : undefined}
         />
-        <TouchableOpacity onPress={() => handleDelete(item._id)}>
+        <TouchableOpacity onPress={() => handleConfirmDelete(item._id)}>
           <AntDesign name="delete" size={24} color="#FF3D00" />
         </TouchableOpacity>
       </View>
@@ -146,6 +157,7 @@ const Home = () => {
           style={styles.input}
           placeholder="Add a new todo"
           placeholderTextColor="#888"
+          maxLength={1000}
         />
         {isSubmitting ? (
           <ActivityIndicator size="small" color="#4630EB" />
@@ -168,6 +180,33 @@ const Home = () => {
           }
         />
       )}
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={deleteModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Are you sure you want to delete this todo?</Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalDeleteButton]}
+                onPress={handleDelete}
+              >
+                <Text style={styles.modalButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Toast
         config={{
           success: (internalState) => (
@@ -226,12 +265,6 @@ const styles = StyleSheet.create({
     elevation: 5,
     marginBottom: 16,
   },
-  label: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 8,
-    color: "#333",
-  },
   input: {
     borderWidth: 1,
     borderColor: "#E0E0E0",
@@ -266,49 +299,88 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
-    shadowRadius: 1.5,
+    shadowRadius: 4,
     elevation: 3,
   },
   todoText: {
     fontSize: 16,
-    flex: 1,
+    color: "#333",
   },
   completedText: {
     textDecorationLine: "line-through",
-    color: "#888",
+    color: "#999",
   },
   actionContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap:10
   },
   emptyText: {
     textAlign: "center",
-    fontSize: 16,
     color: "#888",
+    fontSize: 16,
     marginTop: 20,
   },
-  toastContainer: {
-    padding: 15,
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    padding: 20,
+    borderRadius: 10,
+    width: 300,
+    alignItems: "center",
+  },
+  modalText: {
+    fontSize: 18,
+    color: "#333",
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     borderRadius: 8,
-    backgroundColor: "#4CAF50",
-    marginHorizontal: 20,
-    marginVertical: 10,
+    flex: 1,
+    marginHorizontal: 5,
+    alignItems: "center",
+  },
+  modalCancelButton: {
+    backgroundColor: "#E0E0E0",
+  },
+  modalDeleteButton: {
+    backgroundColor: "#FF3D00",
+  },
+  modalButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  toastContainer: {
+    padding: 12,
+    borderRadius: 8,
+    margin: 10,
+    backgroundColor: "#333",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   toastText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontSize: 16,
   },
   toastError: {
-    backgroundColor: "#f44336",
+    backgroundColor: "#D32F2F",
   },
   toastInfo: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "#1976D2",
   },
 });
 

@@ -12,6 +12,7 @@ const TabLayout = () => {
           tabBarIcon: ({ color }) => (
             <Ionicons name="home" size={24} color={color} />
           ),
+          headerShown: true,
         }}
       />
       <Tabs.Screen

@@ -1,7 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import LoginScreen from "./LoginScreen";
 
 export default function Index() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
@@ -28,5 +27,9 @@ export default function Index() {
     return null;
   }
 
-  return isLoggedIn ? <Redirect href="/home" /> : <LoginScreen />;
+  return isLoggedIn ? (
+    <Redirect href="/home" />
+  ) : (
+    <Redirect href="/LoginScreen" />
+  );
 }
