@@ -76,7 +76,7 @@ export default function LoginScreen() {
           text1: "Success",
           text2: res?.data?.message,
         });
-        router.push("/home");
+        router.replace("/home");
       } else {
         Toast.show({
           type: "error",

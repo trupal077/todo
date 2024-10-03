@@ -75,7 +75,7 @@ export default function RegisterScreen() {
           text2: response?.data?.message,
         });
 
-        router.push("/LoginScreen");
+        router.replace("/LoginScreen");
       } else {
         Toast.show({
           type: "error",

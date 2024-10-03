@@ -1,7 +1,9 @@
 import { Stack } from "expo-router";
+import { useColorScheme } from "react-native";
 import Toast from "react-native-toast-message";
 
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
