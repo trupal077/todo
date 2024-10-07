@@ -1,11 +1,10 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
+import { WebView } from "react-native-webview";
 
 const search = () => {
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Work in progress.</Text>
-    </View>
+    <WebView source={{ uri: "https://www.google.com/" }} style={{ flex: 1 }} />
   );
 };
 
